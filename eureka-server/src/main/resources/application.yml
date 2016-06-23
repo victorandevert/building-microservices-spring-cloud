@@ -1,3 +1,11 @@
 ---
 server:
-  port: 8761
+  port: 8099
+  
+eureka:
+  server:
+    enable-self-preservation: false 
+    waitTimeInMsWhenSyncEmpty: 0   
+  client:
+    registerWithEureka: false
+    fetchRegistry: false      

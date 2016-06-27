@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,21 +24,12 @@ public class PspGatewayController {
 	private String version;
 	
 	@Autowired
-	private DiscoveryClient client;
+	private LoadBalancerClient client;
+	
 	
 	@RequestMapping(value="/execute-payment/{psp}/{id}", method = RequestMethod.GET)	
-	public String executePayment(@PathVariable("psp") String psp, @PathVariable("id") String id){		
-		String response = null;				
-		
-		List<ServiceInstance> services = client.getInstances(psp+"-client");
-	    if (services != null && services.size() > 0) {
-	    	URI uri = services.get(0).getUri();
-	    	if (uri != null) {
-	    		response = (new RestTemplate()).getForObject(uri+"/execute-payment/"+id,String.class);	
-			}else{
-				response = HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase();
-			}
-	    }		
-		return response;
+	public String executePayment(@PathVariable("psp") String psp, @PathVariable("id") String id){							
+		ServiceInstance service = client.choose(psp+"-client");
+		return (new RestTemplate()).getForObject(service.getUri()+"/execute-payment/"+id,String.class);
 	}
 }

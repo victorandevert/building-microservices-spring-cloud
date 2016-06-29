@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.example.client.AdyenClient;
 import com.example.client.KlarnaClient;
 import com.example.client.PaypalClient;
+import com.example.service.PaymentService;
 
 @RestController
 public class PspGatewayController {
@@ -20,26 +21,20 @@ public class PspGatewayController {
 	private String version;
 	
 	@Autowired
-	private AdyenClient adyenClient;
-	
-	@Autowired
-	private KlarnaClient klarnaClient;
-	
-	@Autowired
-	private PaypalClient paypalClient;
+	private PaymentService paymentService;
 	
 	@RequestMapping(value="/execute-payment/{psp}/{id}", method = RequestMethod.GET)	
 	public String executePayment(@PathVariable("psp") String psp, @PathVariable("id") String id){
 		String message = null;
 		switch (psp) {
 			case "adyen":
-				message = this.adyenClient.executePayment(id);
+				message = this.paymentService.executeAdyenPayment(id);
 				break;
 			case "klarna":
-				message = this.klarnaClient.executePayment(id);
+				message = this.paymentService.executeKlarnaPayment(id);
 				break;
 			case "paypal":
-				message = this.paypalClient.executePayment(id);
+				message = this.paymentService.executePaypalPayment(id);
 				break;
 		
 			default:

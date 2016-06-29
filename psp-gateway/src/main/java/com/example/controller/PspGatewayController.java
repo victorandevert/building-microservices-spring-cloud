@@ -2,13 +2,16 @@ package com.example.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.client.ServiceInstance;
-import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
+
+
+import com.example.client.AdyenClient;
+import com.example.client.KlarnaClient;
+import com.example.client.PaypalClient;
 
 @RestController
 public class PspGatewayController {
@@ -17,12 +20,32 @@ public class PspGatewayController {
 	private String version;
 	
 	@Autowired
-	private LoadBalancerClient client;
+	private AdyenClient adyenClient;
 	
+	@Autowired
+	private KlarnaClient klarnaClient;
+	
+	@Autowired
+	private PaypalClient paypalClient;
 	
 	@RequestMapping(value="/execute-payment/{psp}/{id}", method = RequestMethod.GET)	
-	public String executePayment(@PathVariable("psp") String psp, @PathVariable("id") String id){							
-		ServiceInstance service = client.choose(psp+"-client");
-		return (new RestTemplate()).getForObject(service.getUri()+"/execute-payment/"+id,String.class);
-	}
+	public String executePayment(@PathVariable("psp") String psp, @PathVariable("id") String id){
+		String message = null;
+		switch (psp) {
+			case "adyen":
+				message = this.adyenClient.executePayment(id);
+				break;
+			case "klarna":
+				message = this.klarnaClient.executePayment(id);
+				break;
+			case "paypal":
+				message = this.paypalClient.executePayment(id);
+				break;
+		
+			default:
+				message = HttpStatus.NOT_FOUND.getReasonPhrase();
+				break;
+			}		
+		return message;
+	}	
 }

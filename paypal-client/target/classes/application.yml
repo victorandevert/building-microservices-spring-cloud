@@ -1,3 +1,0 @@
----
-server:
-  port: 0 # Use a random unassigned HTTP port
